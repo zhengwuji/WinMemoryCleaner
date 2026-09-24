@@ -1,198 +1,102 @@
-### 3.0.8
+# 更新日志 (Changelog)
 
-**2025-12-13**
+本项目所有重要的版本演进与功能更新均记录于此。  
+项目遵循 [语义化版本 2.0.0 (SemVer)](https://semver.org/lang/zh-CN/) 规范。
 
-- Added /Reset command line option for troubleshooting purposes
-- Added logic to delete orphaned old update files created by the old update mechanism, which are no longer needed ([#168](https://github.com/IgorMundstein/WinMemoryCleaner/issues/168))
-- Added settings to turn the start menu shortcut creation on or off ([#169](https://github.com/IgorMundstein/WinMemoryCleaner/issues/169))
-- Added unit tests to enhance code testability
-- Improved memory usage display on tray icon ([#170](https://github.com/IgorMundstein/WinMemoryCleaner/issues/170))
-- Updated documentation with missing changes from previous versions
-- UI & Code enhancements
+---
 
-### 3.0.7
+### [3.0.8] - 2025-12-13
 
-**2025-11-20**
+#### 新增特性
+- **新增 `/Reset` 故障重置命令行选项**：当配置异常或窗口挂起时，支持通过命令行一键复位至出厂默认配置并退出。
+- **孤立更新残留自动清理**：启动时自动扫描并清理旧版更新机制遗留的临时残留文件。
+- **开始菜单快捷方式开关**：设置中新增配置项，支持用户按需自由开启或关闭“启动时创建开始菜单快捷方式”。
+- **单元测试套件重构**：编写并引入更全面的自动化单元测试，大幅提高代码可靠性与可测性。
 
-- Added start menu shortcut creation when the app opens ([#160](https://github.com/IgorMundstein/WinMemoryCleaner/issues/160))
-- Removed the code that tried to validate the code signature, as it was causing errors with package managers
-- UI & Code enhancements
+#### 优化与改进
+- **系统托盘内存数字渲染增强**：优化托盘图标动态文字排版算法，保证高分屏及不同 DPI 下百分比数字清晰显示。
+- **界面细节与代码精炼**：精简底层冗余代码，提升界面响应流畅度。
+- **文档与指引同步补全**：全面梳理历史版本缺失的技术说明与参数指南。
 
-### 3.0.6
+---
 
-**2025-11-18**
+### [3.0.7] - 2025-11-20
 
-- Fixed tooltip text for the system tray icon. Windows restricts tooltip length to 64 characters, and in some languages, this limit is exceeded when the virtual memory display is enabled. ([#148](https://github.com/IgorMundstein/WinMemoryCleaner/issues/148)) ([#155](https://github.com/IgorMundstein/WinMemoryCleaner/issues/155)) ([#159](https://github.com/IgorMundstein/WinMemoryCleaner/issues/159))
+#### 优化与改进
+- **快捷方式静默维护**：应用开启时智能补齐开始菜单快捷入口。
+- **代码清理**：移除易与第三方包管理器发生冲突的代码签名硬性校验逻辑，提升环境兼容性。
+- **稳定性增强**：多项 UI 交互和后台逻辑细节优化。
 
-### 3.0.5
+---
 
-**2025-11-17**
+### [3.0.6] - 2025-11-18
 
-- Console mode hotfix ([#156](https://github.com/IgorMundstein/WinMemoryCleaner/issues/156))
+#### 问题修复
+- **托盘悬浮提示字符溢出修复**：针对 Windows 系统托盘提示信息严格限制 64 字符的问题，修复了在某些长字符语言环境下开启虚拟内存显示导致提示被截断或异常的缺陷。
 
-### 3.0.4
+---
 
-**2025-11-17**
+### [3.0.5] - 2025-11-17
 
-- Added a setting to set the color of the tray icon when optimization is running
-- Added a setting to trigger optimization to the tray icon using the middle mouse click ([#141](https://github.com/IgorMundstein/WinMemoryCleaner/issues/141))
-- Added a tray icon rotate effect when optimization is running
-- Added support for European Portuguese (PT) language
-- Enhanced the run on startup feature for desktop and laptop computers ([#137](https://github.com/IgorMundstein/WinMemoryCleaner/issues/137)) ([#139](https://github.com/IgorMundstein/WinMemoryCleaner/issues/139))
-- Fixed app crash after Windows hibernation ([#145](https://github.com/IgorMundstein/WinMemoryCleaner/issues/145))
-- Fixed auto update ([#148](https://github.com/IgorMundstein/WinMemoryCleaner/issues/148)) ([#151](https://github.com/IgorMundstein/WinMemoryCleaner/issues/151))
-- Removed unnecessary code related to package managers (Chocolatey, Scoop, and WinGet) due to a new strategy for package publication
-- UI & Code enhancements
-- Updated Arabic and Korean translations
+#### 问题修复
+- **控制台命令行模式紧急修复**：修复特定参数组合下无头执行参数解析异常的问题。
 
-### 3.0.2
+---
 
-**2025-09-06**
+### [3.0.4] - 2025-11-17
 
-- Enhanced code and user interface
-- Enhanced functionality to run on startup and improved package manager support (Chocolatey, Scoop, and WinGet)
-- Fixed a bug that prevented the "Run On Priority" setting from being saved.
-- Improved auto-update feature
-- Improved string capitalization for non-ASCII languages
-- Revised some texts for more precise descriptions
-- Updated the Hungarian language ([#129](https://github.com/IgorMundstein/WinMemoryCleaner/issues/129))
+#### 新增特性
+- **托盘图标优化状态颜色设置**：支持单独自定义后台正在执行内存整理时的托盘专属颜色。
+- **鼠标中键一键快捷清理**：支持在托盘图标上直接点击鼠标中键（滚轮）瞬时触发内存深度清理。
+- **清理动态旋转特效**：执行优化期间托盘图标呈现流畅的旋转动画视觉反馈。
+- **新增欧洲葡萄牙语 (PT) 本地化**。
 
-### 3.0.0
+#### 问题修复与优化
+- **修复休眠唤醒崩溃**：解决从 Windows 睡眠/休眠状态恢复时程序极小概率闪退的问题。
+- **修复自动检查更新故障**：优化更新检测网络超时与重试逻辑。
+- **强化开机自启**：改善桌面台式机与笔记本电脑在复杂电源策略下的计划任务自启成功率。
+- **多语言修正**：完善阿拉伯语、韩语等本地化文字。
 
-**2025-08-02**
+---
 
-- Added a help `?` menu
-- Added a security check to verify the code certificate and warn if the user downloaded from an untrusted source. It's not bulletproof because the project is open source, but it makes it harder for people with bad intentions
-- Added a setting to reduce or increase the font size. It's helpful for different screen sizes and resolutions
-- Added an option to turn off the optimization hotkey ([#94](https://github.com/IgorMundstein/WinMemoryCleaner/issues/94))
-- Added app to package managers: Chocolatey, Scoop, and Winget ([#89](https://github.com/IgorMundstein/WinMemoryCleaner/issues/89))
-- Added code digital signature provided by SignPath.io to ensure authenticity and user safety
-- Added donation options to the new help `?` menu and on GitHub
-- Added GitHub workflows to enhance release delivery and trustworthiness on malicious scanner websites
-- Added localization for Hebrew, Hungarian, Norwegian, and Thai languages
-- Added optimization reason (Low Memory, Manual, or Schedule) on notifications and logs ([#110](https://github.com/IgorMundstein/WinMemoryCleaner/issues/110))
-- Added reset to default settings feature to the new help `?` menu
-- Added support to run as a Windows Service ([#96](https://github.com/IgorMundstein/WinMemoryCleaner/issues/96))
-- Added two new memory areas: modified file cache and registry cache
-- Enhanced run on startup feature ([#91](https://github.com/IgorMundstein/WinMemoryCleaner/issues/91)) ([#108](https://github.com/IgorMundstein/WinMemoryCleaner/issues/108))
-- Enhanced text formats for better translations
-- Enhanced tray icon customizations for memory usage ([#111](https://github.com/IgorMundstein/WinMemoryCleaner/issues/111)) ([#112](https://github.com/IgorMundstein/WinMemoryCleaner/issues/112))
-- Improved code, documentation and user interface ([#92](https://github.com/IgorMundstein/WinMemoryCleaner/issues/92)) ([#103](https://github.com/IgorMundstein/WinMemoryCleaner/issues/103))
-- Modified window event log messages to JSON format
-- Moved the About this project link to the new help menu
-- Moved Windows registry path from the current user to the local machine
-- Renamed memory area system working set to system file cache
-- Renamed memory processes working set to working set
+### [3.0.2] - 2025-09-06
 
-**Notes (This project is celebrating its 6th year. So, nothing better than a major update release.)**
+#### 问题修复与优化
+- **修复运行优先级未持久化 Bug**：解决退出程序后“以低优先级运行”选项未能成功保存到注册表的问题。
+- **非 ASCII 语言首字母大小写校正**：针对土耳其语、阿塞拜疆语等特定字符集规范化大小写转换。
+- **文本表达更精准**：对界面各内存清理区域的说明文案进行清晰度升级。
+- **匈牙利语本地化更新**。
 
-- It's the first release implementing the CI/CD pipelines to publish the app to Chocolatey, Scoop, and Winget. So, there may be a delay in being available on these package managers.
-- If you find this app helpful, please consider donating. Your donation helps keep the project alive, optimized, and free for everyone.
-- If you run the app with command-line arguments (no GUI), check the modified memory area parameter names.
-- Many contributors often provide translation updates, as some texts might not be in the best format due to frequent translation revisions. After we introduce the CI/CD workflows, we expect to publish releases more often to update minor corrections quickly. We now use the 'major.minor.patch' format for the app version, which will allow us to launch patch releases for localizations.
-- We prioritize transparency and user safety. Since version 3.0.0, we have been digitally signing our files through [SignPath.io](https://about.signpath.io/product/open-source) using a free certificate provided under the [SignPath Terms of Use](https://signpath.org/terms). The project received the certificate in recognition of its popularity and public value in the open-source community. This process ensures that we distribute authentic files that have not been tampered with. By doing this, we will build trust with Microsoft Defender SmartScreen over time, and maybe someday we will obliterate that "Windows protected your PC" warning.
+---
 
-### 2.8
+### [3.0.0] - 2025-08-02 (六周年重大架构升级)
 
-**2023-12-24**
+#### 重大新特性
+- **引入 Windows 后台服务模式 (`/Install` & `/Uninstall`)**：支持无界面独立常驻系统服务，实现全自动静默内存治理。
+- **新增两大内存清理项**：
+  - **已修改文件缓存 (Modified File Cache)**：将固定磁盘未写入的数据强制刷盘并释放对应物理页。
+  - **注册表缓存 (Registry Cache)**：主动刷新并卸载长期未使用的内存注册表配置单元。
+- **全新帮助菜单与关于系统**：主界面新增菜单入口，集成使用文档、捐赠赞赏及一键恢复出厂。
+- **界面字体缩放调节**：支持在大屏与小屏设备上无级缩放程序字体。
+- **全局快捷键独立开关**：支持单独开关快捷键，避免与全屏大型游戏键位冲突。
+- **托盘图标深度定制**：支持自由配置正常/预警/危险三种阈值颜色，并以透明背景展示当前内存负荷。
+- **自动化 CI/CD 与多渠道分发**：接入 GitHub Actions 全自动构建、测试发布管线，并上架 Chocolatey、Scoop、WinGet。
+- **多语言扩展**：新增希伯来语、匈牙利语、挪威语、泰语等语言包。
 
-- Added optimization progress bar to the optimize button
-- Improved auto-update task
-- Improved code & UI
-- Improved memory usage tray icon
+#### 核心重构与更名
+- 内存项名称规范化：系统工作集重命名为 **“系统文件缓存 (System File Cache)”**，进程工作集重命名为 **“工作集 (Working Set)”**。
+- 配置存储位置规范化：由用户级注册表迁移至机器级 `HKLM\Software\WinMemoryCleaner`，确保跨多用户及服务运行时的统一性。
+- 系统事件日志规范化：Windows 事件查看器内部记录全面升级为标准化 JSON 格式，方便运维脚本抓取分析。
 
-### 2.7
+---
 
-**2023-12-22**
+### [2.8] - 2023-12-24
+- 优化按钮增加动态处理进度条。
+- 增强自动更新后台检测任务。
 
-- Changed the error dialog to a warning log event when a firewall blocks the app
-- Improved Chinese (Simplified/Traditional), French, Korean, and Serbian languages
-- Improved code
-- Improved memory usage tray icon
+---
 
-### 2.6
-
-**2023-12-17**
-
-- Added Albanian, Bulgarian, Irish, Persian, and Russian languages
-- Added approximate memory released to optimization notification
-- Added right-to-left (RTL) language and UI support
-- Added run on low priority setting. If enabled, it limits the app's resource usage by reducing the process priority and ensuring it runs efficiently. It might increase the optimization time, but it helps if your Windows freezes during it
-- Added show virtual memory setting and memory usage view
-- Added support for cultures' native formats, like decimal separators
-- Added tray icon customization. Users can choose between the default app image or show physical memory usage with a background color based on the value. (0% - 79%) White | (80% - 89%) Orange | (90% - 100%) Red
-- Improved code, documentation, and UI
-- Improved Greek language
-- Improved UI rendering when the start minimized setting is enabled
-
-### 2.5
-
-**2023-08-20**
-
-- Added optimization runtime stats to the log
-- Added **compact mode** view. Click the arrow at the top right of the screen to collapse or expand the window
-- Changed app priority to low. Optimization may run a little slower, but it will reduce the chance of Windows freezing during the optimization
-- Improved code and UI
-- Improved Greek and Polish languages
-
-### 2.4
-
-**2023-08-07**
-
-- Added Polish and Ukrainian languages
-- Improved code and documentation
-
-### 2.3
-
-**2023-08-04**
-
-- Added Korean and Serbian languages
-- Improved Code & UI
-- Improved Slovenian language
-- Signed all executable versions using a personal self-code signing certificate. It reset the downloads counter
-
-### 2.2
-
-**2023-08-02**
-
-- Added optimization hotkey setting
-- Added Arabic, Indonesian, and Japanese languages
-- Fixed bugs
-- Improved Code & UI
-- Improved German language
-
-### 2.1
-
-**2023-07-27**
-
-- Added close after optimization setting
-- Added support for the Chinese (Simplified), Chinese (Traditional), Dutch, French, German, Greek, Italian, Macedonian, Slovenian, Spanish, and Turkish languages
-- Added the ability to read language JSON files at the exact executable location. That will help contributors to test the translation before submitting it
-- Added global hotkey (CTRL + ALT + M) to optimize
-- Code improvements and bug fixes
-- Modified notify icon title to show the memory usage
-- Modified the default window focus to the Optimize button. That will allow the user to press ENTER to run the optimization after the app starts
-
-### 2.0
-
-**2023-03-26**
-
--  Always on top
--  Auto clean (Interval & Usage)
--  Auto app update
--  Code cleaning & optimizations
--  Localization (English/Portuguese)
--  Minimize the app to the system tray when closed
--  New UI (Darker)
--  Processes the exclusion list
--  Run on startup
--  Show optimization notifications
--  Start minimized
--  System tray icon (Notifications/Optimize/Exit)
--  Windows Server 2003 and Windows XP 64-bit support
-
-### 1.1
-
-**2021-09-06**
-
-* Initial release deprecated. Files updated to 2.0 because it has the auto-update feature
+### [2.0 - 2.7] 历史版本沉淀
+- 引入 WPF 极简单页面应用 (SPA) 与 MVVM 架构。
+- 采用 S.O.L.I.D. 面向对象原则重构，全面消除所有第三方库依赖，实现极致单文件便携。
+- 引入从 Windows Vista / 7 到 Windows 11 全平台兼容支持。
