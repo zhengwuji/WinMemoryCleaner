@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace WinMemoryCleaner
 {
@@ -213,21 +214,34 @@ namespace WinMemoryCleaner
                 }
                 else
                 {
-                    Thread.Sleep(1000);
-                    App.Shutdown();
+                    // Give the UI a moment to show the final state, then shut down.
+                    // A DispatcherTimer keeps the UI thread responsive; Thread.Sleep
+                    // here would freeze the window during that second.
+                    var shutdownTimer = new DispatcherTimer(DispatcherPriority.Normal, Dispatcher)
+                    {
+                        Interval = TimeSpan.FromSeconds(1)
+                    };
+
+                    shutdownTimer.Tick += (sender, e) =>
+                    {
+                        shutdownTimer.Stop();
+                        App.Shutdown();
+                    };
+
+                    shutdownTimer.Start();
                 }
             }
             else
             {
                 _viewModel.IsBusy = false;
-                
-             // Wait for the button to be enabled before trying to refocus it
-           // The button is disabled while IsOptimizationRunning = true
+
+                // Wait for the button to be enabled before trying to refocus it.
+                // The button is disabled while IsOptimizationRunning = true.
                 Dispatcher.BeginInvoke(new Action(() =>
-             {
-              SetFocusTo(Optimize, force: true);
-           }), System.Windows.Threading.DispatcherPriority.Loaded);
- }
+                {
+                    SetFocusTo(Optimize, force: true);
+                }), System.Windows.Threading.DispatcherPriority.Loaded);
+            }
         }
 
         /// <summary>

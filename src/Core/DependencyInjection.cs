@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
+using System.Collections.Concurrent;
 using System.Linq;
 
 namespace WinMemoryCleaner
@@ -14,8 +14,16 @@ namespace WinMemoryCleaner
         /// </summary>
         public static class Container
         {
-            private static readonly Dictionary<Type, Func<object>> _container = new Dictionary<Type, Func<object>>();
-            private static readonly Dictionary<Type, object> _singleton = new Dictionary<Type, object>();
+            // The container is read from the UI thread and from background timers,
+            // so registrations and resolved singletons live in thread-safe maps.
+            private static readonly ConcurrentDictionary<Type, Func<object>> _container = new ConcurrentDictionary<Type, Func<object>>();
+
+            // Lazy<T> both defers construction and guarantees that a singleton is
+            // materialized exactly once even under concurrent resolution.
+            private static readonly ConcurrentDictionary<Type, Lazy<object>> _singleton = new ConcurrentDictionary<Type, Lazy<object>>();
+
+            // Guards registration so two callers cannot register the same type.
+            private static readonly object _lock = new object();
 
             /// <summary>
             /// Registers the specified instance.
@@ -27,10 +35,13 @@ namespace WinMemoryCleaner
             {
                 var key = typeof(TImplementation);
 
-                if (_container.ContainsKey(key))
-                    throw new InvalidOperationException(string.Format(Localizer.Culture, "{0} is already registered.", key.Name));
+                lock (_lock)
+                {
+                    if (_container.ContainsKey(key) || _singleton.ContainsKey(key))
+                        throw new InvalidOperationException(string.Format(Localizer.Culture, "{0} is already registered.", key.Name));
 
-                _singleton.Add(typeof(TImplementation), instance);
+                    _singleton.TryAdd(key, new Lazy<object>(() => instance));
+                }
             }
 
             /// <summary>
@@ -44,13 +55,46 @@ namespace WinMemoryCleaner
             {
                 var key = typeof(TInterface);
 
-                if (_container.ContainsKey(key))
-                    throw new InvalidOperationException(string.Format(Localizer.Culture, "{0} is already registered.", key.Name));
+                lock (_lock)
+                {
+                    if (_container.ContainsKey(key) || _singleton.ContainsKey(key))
+                        throw new InvalidOperationException(string.Format(Localizer.Culture, "{0} is already registered.", key.Name));
 
-                if (singleton)
-                    _singleton.Add(typeof(TImplementation), null);
+                    if (singleton)
+                        _singleton.TryAdd(typeof(TImplementation), new Lazy<object>(() => CreateInstance(typeof(TImplementation))));
 
-                _container.Add(key, () => Resolve<TImplementation>());
+                    _container.TryAdd(key, () => Resolve<TImplementation>());
+                }
+            }
+
+            /// <summary>
+            /// Creates an instance of the specified type.
+            /// </summary>
+            /// <param name="type">The type.</param>
+            /// <returns>The created instance.</returns>
+            /// <exception cref="InvalidOperationException"></exception>
+            private static object CreateInstance(Type type)
+            {
+                Func<object> func;
+                object instance = null;
+
+                if (type.IsInterface && _container.TryGetValue(type, out func))
+                    instance = func();
+
+                if (!type.IsInterface && instance == null)
+                {
+                    var constructor = type.GetConstructors().SingleOrDefault();
+
+                    if (constructor == null)
+                        throw new InvalidOperationException(string.Format(Localizer.Culture, "{0} has no public constructor.", type.Name));
+
+                    instance = Activator.CreateInstance(type, constructor.GetParameters().Select(parameter => Resolve(parameter.ParameterType)).ToArray());
+                }
+
+                if (instance == null)
+                    throw new InvalidOperationException(string.Format(Localizer.Culture, "{0} is not registered.", type.Name));
+
+                return instance;
             }
 
             /// <summary>
@@ -61,25 +105,15 @@ namespace WinMemoryCleaner
             /// <exception cref="InvalidOperationException"></exception>
             private static object Resolve(Type type)
             {
-                if (_singleton.ContainsKey(type) && _singleton[type] != null)
-                    return _singleton[type];
+                if (type == null)
+                    throw new ArgumentNullException("type");
 
-                Func<object> func;
-                object instance = null;
+                Lazy<object> singleton;
 
-                if (type.IsInterface && _container.TryGetValue(type, out func))
-                    instance = func();
+                if (_singleton.TryGetValue(type, out singleton))
+                    return singleton.Value;
 
-                if (!type.IsInterface && instance == null)
-                    instance = Activator.CreateInstance(type, type.GetConstructors().SingleOrDefault().GetParameters().Select(p => Resolve(p.ParameterType)).ToArray());
-
-                if (instance == null)
-                    throw new InvalidOperationException(string.Format(Localizer.Culture, "{0} is not registered.", type.Name));
-
-                if (_singleton.ContainsKey(type))
-                    _singleton[type] = instance;
-
-                return instance;
+                return CreateInstance(type);
             }
 
             /// <summary>

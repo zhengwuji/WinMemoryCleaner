@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
@@ -45,6 +45,7 @@ namespace WinMemoryCleaner
 
             public static class CommandLineArgument
             {
+                public const string ApplyUpdate = "ApplyUpdate";
                 public const string Install = "Install";
                 public const string Reset = "Reset";
                 public const string Service = "Service";
@@ -75,8 +76,8 @@ namespace WinMemoryCleaner
 
             public static class Repository
             {
-                private const string GitHub = "https://github.com/IgorMundstein/WinMemoryCleaner";
-                private const string GitHubRaw = "https://raw.githubusercontent.com/IgorMundstein/WinMemoryCleaner/main";
+                private const string GitHub = "https://github.com/zhengwuji/WinMemoryCleaner";
+                private const string GitHubRaw = "https://raw.githubusercontent.com/zhengwuji/WinMemoryCleaner/main";
 
                 public static readonly Uri AboutUri = new Uri(GitHub + "?tab=readme-ov-file#windows-memory-cleaner");
                 public static readonly Uri AssemblyInfoUri = new Uri(GitHubRaw + "/src/Properties/AssemblyInfo.cs");

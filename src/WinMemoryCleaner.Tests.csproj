@@ -1,0 +1,63 @@
+<Project>
+
+  <!-- This project shares src\ with WinMemoryCleaner.csproj, so it must not use the
+       same intermediate directory: a shared obj\project.assets.json makes each
+       restore clobber the other project's resolved references. These properties
+       must be set before Microsoft.Common.props is imported, which is why the SDK
+       is imported explicitly below instead of through the Sdk attribute. -->
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>obj\Tests\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>obj\Tests\</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>WinMemoryCleaner.Tests</AssemblyName>
+    <RootNamespace>WinMemoryCleaner.Test</RootNamespace>
+
+    <!-- Tests live beside the app so the historical `Test\` folder layout is kept.
+         The XAML items belong to the app project only: without these switches the
+         shared directory makes this library try to compile App.xaml. -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <EnableDefaultPageItems>false</EnableDefaultPageItems>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+
+    <!-- Build into bin\Tests\ instead of sharing src\bin\Release\ with the app.
+         Otherwise a solution build + test run leaves NUnit, the test adapter and
+         WinMemoryCleaner.Tests.dll sitting next to the shipping WinMemoryCleaner.exe,
+         which any future packaging step that globs that folder would sweep up. -->
+    <BaseOutputPath>bin\Tests\</BaseOutputPath>
+
+    <WarningLevel>4</WarningLevel>
+    <NoWarn>CS1591,CS0618,CS3001,CS3003</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Test\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="WinMemoryCleaner.csproj" />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+</Project>

@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
@@ -163,9 +162,10 @@ namespace WinMemoryCleaner
                 if (!string.IsNullOrEmpty(path) && File.Exists(path))
                     return path;
             }
-            catch 
+            catch (Exception e)
             {
-                // ignored
+                // Fall through to the assembly-based lookup below.
+                Logger.Debug(e);
             }
 
             try
@@ -175,9 +175,9 @@ namespace WinMemoryCleaner
                 if (entry != null && !string.IsNullOrEmpty(entry.Location))
                     return entry.Location;
             }
-            catch
+            catch (Exception e)
             {
-                // ignored
+                Logger.Debug(e);
             }
 
             return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppDomain.CurrentDomain.FriendlyName);
@@ -192,8 +192,10 @@ namespace WinMemoryCleaner
             {
                 return (Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()).GetName().Version ?? new Version(0, 0, 0, 0);
             }
-            catch
+            catch (Exception e)
             {
+                Logger.Debug(e);
+
                 return new Version(0, 0, 0, 0);
             }
         }
@@ -214,31 +216,15 @@ namespace WinMemoryCleaner
                     if (os.Version != null && os.Version.Major < 6)
                         return false; // Windows XP/2003 and earlier
                 }
-                catch
+                catch (Exception e)
                 {
+                    // Treat an undeterminable OS version as supported rather than
+                    // silently disabling auto-update.
+                    Logger.Debug(e);
                 }
 
                 return true;
             }
-        }
-
-        /// <summary>
-        /// Gets the string name of a property or field.
-        /// </summary>
-        /// <typeparam name="T">The type of the member.</typeparam>
-        /// <param name="expression">A lambda expression that accesses the member.</param>
-        /// <returns>The string name of the member.</returns>
-        public static string NameOf<T>(Expression<Func<T>> expression)
-        {
-            if (expression == null)
-                throw new ArgumentNullException("expression");
-
-            var memberExpression = expression.Body as MemberExpression;
-
-            if (memberExpression == null)
-                throw new ArgumentException("Expression must be a simple member access (e.g., () => myObject.MyProperty).");
-
-            return memberExpression.Member.Name;
         }
 
         /// <summary>

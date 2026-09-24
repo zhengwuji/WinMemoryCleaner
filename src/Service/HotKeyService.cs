@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -79,24 +79,25 @@ namespace WinMemoryCleaner
                         {
                             Unregister(hotKey);
                         }
-                        catch
+                        catch (Exception e)
                         {
-                            // ignored
+                            // Keep releasing the remaining hot keys.
+                            Logger.Debug(e);
                         }
                     }
                 }
-                catch
+                catch (Exception e)
                 {
-                    // ignored
+                    Logger.Debug(e);
                 }
 
                 try
                 {
                     ComponentDispatcher.ThreadPreprocessMessage -= OnThreadPreprocessMessage;
                 }
-                catch
+                catch (Exception e)
                 {
-                    // ignored
+                    Logger.Debug(e);
                 }
             }
         }
@@ -177,9 +178,9 @@ namespace WinMemoryCleaner
                 if (!_registered.ContainsKey(hotkey))
                     _registered.Add(hotkey, action);
             }
-            catch
+            catch (Exception e)
             {
-                // ignored
+                Logger.Debug(e, "Failed to register the hot key.");
             }
 
             return result;
@@ -203,9 +204,9 @@ namespace WinMemoryCleaner
 
                 _registered.Remove(hotkey);
             }
-            catch
+            catch (Exception e)
             {
-                // ignored
+                Logger.Debug(e, "Failed to unregister the hot key.");
             }
 
             return result;

@@ -42,8 +42,10 @@ namespace WinMemoryCleaner
 
                 return containerWidth * (percentage / 100.0);
             }
-            catch
+            catch (Exception e)
             {
+                Logger.Debug(e);
+
                 return 0.0;
             }
         }

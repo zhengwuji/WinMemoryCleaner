@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Configuration.Install;
@@ -120,9 +120,10 @@ namespace WinMemoryCleaner
                     {
                         process.Kill();
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        // ignored
+                        // The process may have already exited, or be protected.
+                        Logger.Debug(e);
                     }
                 }
 
@@ -143,9 +144,10 @@ namespace WinMemoryCleaner
                     {
                         process.Kill();
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        // ignored
+                        // The process may have already exited, or be protected.
+                        Logger.Debug(e);
                     }
                 }
             }

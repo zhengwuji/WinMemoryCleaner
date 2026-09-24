@@ -10,11 +10,12 @@ namespace WinMemoryCleaner.Test
     [SetUpFixture]
     public sealed class TestCleanup
     {
-        [TearDown]
+        // NUnit 3 requires the namespace-level teardown hook to be OneTimeTearDown;
+        // a plain [TearDown] inside a SetUpFixture is rejected.
+        [OneTimeTearDown]
         public void ResetSettingsAfterAllTests()
-        {   
+        {
             Settings.Reset(true);
-            Assert.IsTrue(true, "Settings have been reset to defaults");
         }
     }
 }

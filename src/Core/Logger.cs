@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32.SafeHandles;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -18,6 +18,11 @@ namespace WinMemoryCleaner
         private static FileStream _consoleStream;
         private static StreamWriter _consoleWriter;
         private static Enums.Log.Levels _level = Enums.Log.Levels.Debug | Enums.Log.Levels.Information | Enums.Log.Levels.Warning | Enums.Log.Levels.Error;
+
+        // Logger is called from the UI thread, hotkey callbacks and timer threads,
+        // so console state and the level are guarded.
+        private static readonly object _consoleLock = new object();
+        private static readonly object _levelLock = new object();
 
         #endregion Fields
 
@@ -39,16 +44,18 @@ namespace WinMemoryCleaner
                     new EventLogTraceListener(Constants.App.Title)
                 });
             }
-            catch
+            catch (Exception e)
             {
+                Event(string.Format(Localizer.Culture, "Failed to initialize the trace listeners: {0}", e.GetMessage()), EventLogEntryType.Warning);
+
                 try
                 {
                     if (Trace.Listeners.Count == 0)
                         Trace.Listeners.Add(new DefaultTraceListener() { Name = Constants.App.Title });
                 }
-                catch (Exception e)
+                catch (Exception fallbackError)
                 {
-                    Event(e.GetMessage(), EventLogEntryType.Error);
+                    Event(fallbackError.GetMessage(), EventLogEntryType.Error);
                 }
             }
         }
@@ -59,55 +66,60 @@ namespace WinMemoryCleaner
         /// </summary>
         internal static void Dispose()
         {
-            if (_consoleWriter != null)
+            lock (_consoleLock)
             {
-                try
+                if (_consoleWriter != null)
                 {
-                    _consoleWriter.Flush();
-                }
-                catch
-                {
-                    // ignored
+                    try
+                    {
+                        _consoleWriter.Flush();
+                    }
+                    catch (Exception e)
+                    {
+                        // Logging here must go to the event log: Trace listeners are
+                        // already being torn down, so Log() could recurse.
+                        Event(string.Format(Localizer.Culture, "Failed to flush the console writer: {0}", e.GetMessage()), EventLogEntryType.Warning);
+                    }
+
+                    try
+                    {
+                        _consoleWriter.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        Event(string.Format(Localizer.Culture, "Failed to close the console writer: {0}", e.GetMessage()), EventLogEntryType.Warning);
+                    }
+
+                    _consoleWriter = null;
                 }
 
-                try
+                if (_consoleStream != null)
                 {
-                    _consoleWriter.Close();
-                }
-                catch
-                {
-                    // ignored
+                    try
+                    {
+                        _consoleStream.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        Event(string.Format(Localizer.Culture, "Failed to close the console stream: {0}", e.GetMessage()), EventLogEntryType.Warning);
+                    }
+
+                    _consoleStream = null;
                 }
 
-                _consoleWriter = null;
-            }
-
-            if (_consoleStream != null)
-            {
-                try
+                if (_consoleHandle != null)
                 {
-                    _consoleStream.Close();
-                }
-                catch
-                {
-                    // ignored
-                }
+                    try
+                    {
+                        _consoleHandle.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        Event(string.Format(Localizer.Culture, "Failed to close the console handle: {0}", e.GetMessage()), EventLogEntryType.Warning);
+                    }
 
-                _consoleStream = null;
-            }
-
-            if (_consoleHandle != null)
-            {
-                try
-                {
-                    _consoleHandle.Close();
+                    _consoleHandle = null;
                 }
-                catch
-                {
-                    // ignored
-                }
-
-                _consoleHandle = null;
             }
         }
 
@@ -121,15 +133,15 @@ namespace WinMemoryCleaner
         /// <value>
         ///   <c>true</c> if console output is enabled; otherwise, <c>false</c>.
         /// </value>
-        private static bool IsConsoleEnabled { get { return _consoleWriter != null; } }
+        private static bool IsConsoleEnabled { get { lock (_consoleLock) { return _consoleWriter != null; } } }
 
-        private static bool IsDebugEnabled { get { return (_level & Enums.Log.Levels.Debug) != 0; } }
+        private static bool IsDebugEnabled { get { return (Level & Enums.Log.Levels.Debug) != 0; } }
 
-        private static bool IsErrorEnabled { get { return (_level & Enums.Log.Levels.Error) != 0; } }
+        private static bool IsErrorEnabled { get { return (Level & Enums.Log.Levels.Error) != 0; } }
 
-        private static bool IsInformationEnabled { get { return (_level & Enums.Log.Levels.Information) != 0; } }
+        private static bool IsInformationEnabled { get { return (Level & Enums.Log.Levels.Information) != 0; } }
 
-        private static bool IsWarningEnabled { get { return (_level & Enums.Log.Levels.Warning) != 0; } }
+        private static bool IsWarningEnabled { get { return (Level & Enums.Log.Levels.Warning) != 0; } }
 
         /// <summary>
         /// Sets the log level.
@@ -139,26 +151,29 @@ namespace WinMemoryCleaner
         /// </value>
         public static Enums.Log.Levels Level
         {
-            get { return _level; }
+            get { lock (_levelLock) { return _level; } }
             set
             {
-                switch (value)
+                lock (_levelLock)
                 {
-                    case Enums.Log.Levels.Debug:
-                        _level = Enums.Log.Levels.Debug | Enums.Log.Levels.Information | Enums.Log.Levels.Warning | Enums.Log.Levels.Error;
-                        break;
+                    switch (value)
+                    {
+                        case Enums.Log.Levels.Debug:
+                            _level = Enums.Log.Levels.Debug | Enums.Log.Levels.Information | Enums.Log.Levels.Warning | Enums.Log.Levels.Error;
+                            break;
 
-                    case Enums.Log.Levels.Information:
-                        _level = Enums.Log.Levels.Information | Enums.Log.Levels.Warning | Enums.Log.Levels.Error;
-                        break;
+                        case Enums.Log.Levels.Information:
+                            _level = Enums.Log.Levels.Information | Enums.Log.Levels.Warning | Enums.Log.Levels.Error;
+                            break;
 
-                    case Enums.Log.Levels.Warning:
-                        _level = Enums.Log.Levels.Warning | Enums.Log.Levels.Error;
-                        break;
+                        case Enums.Log.Levels.Warning:
+                            _level = Enums.Log.Levels.Warning | Enums.Log.Levels.Error;
+                            break;
 
-                    case Enums.Log.Levels.Error:
-                        _level = Enums.Log.Levels.Error;
-                        break;
+                        case Enums.Log.Levels.Error:
+                            _level = Enums.Log.Levels.Error;
+                            break;
+                    }
                 }
             }
         }
@@ -196,30 +211,33 @@ namespace WinMemoryCleaner
         /// </summary>
         public static void EnableConsoleOutput()
         {
-            try
+            lock (_consoleLock)
             {
-                if (IsConsoleEnabled)
-                    return;
-
-                if (NativeMethods.AttachConsole(Constants.Windows.Console.AttachParentProcess))
+                try
                 {
-                    var stdHandle = NativeMethods.GetStdHandle(Constants.Windows.Console.StdOutputHandle);
+                    if (_consoleWriter != null)
+                        return;
 
-                    if (stdHandle != IntPtr.Zero && stdHandle != new IntPtr(-1))
+                    if (NativeMethods.AttachConsole(Constants.Windows.Console.AttachParentProcess))
                     {
-                        _consoleHandle = new SafeFileHandle(stdHandle, false);
-                        _consoleStream = new FileStream(_consoleHandle, FileAccess.Write);
-                        _consoleWriter = new StreamWriter(_consoleStream, Encoding.Default) { AutoFlush = true };
+                        var stdHandle = NativeMethods.GetStdHandle(Constants.Windows.Console.StdOutputHandle);
 
-                        Console.SetOut(_consoleWriter);
+                        if (stdHandle != IntPtr.Zero && stdHandle != new IntPtr(-1))
+                        {
+                            _consoleHandle = new SafeFileHandle(stdHandle, false);
+                            _consoleStream = new FileStream(_consoleHandle, FileAccess.Write);
+                            _consoleWriter = new StreamWriter(_consoleStream, Encoding.Default) { AutoFlush = true };
 
-                        Trace.Listeners.Clear();
+                            Console.SetOut(_consoleWriter);
+
+                            Trace.Listeners.Clear();
+                        }
                     }
                 }
-            }
-            catch
-            {
-                // ignored
+                catch (Exception e)
+                {
+                    Event(string.Format(Localizer.Culture, "Failed to attach the parent console: {0}", e.GetMessage()), EventLogEntryType.Warning);
+                }
             }
         }
 
@@ -255,9 +273,11 @@ namespace WinMemoryCleaner
             {
                 EventLog.WriteEntry(Constants.App.Title, message, type);
             }
-            catch
+            catch (Exception e)
             {
-                // ignored
+                // Last resort: the event log itself is unavailable. Write to the
+                // debugger so the message is not lost entirely, without recursing.
+                System.Diagnostics.Debug.WriteLine(string.Format(Localizer.Culture, "Event log write failed ({0}): {1}", e.GetMessage(), message));
             }
         }
 
@@ -288,9 +308,10 @@ namespace WinMemoryCleaner
                         }
                     }
                 }
-                catch
+                catch (Exception e)
                 {
-                    // ignored
+                    // Stack-trace enrichment is best-effort; never let it break logging.
+                    System.Diagnostics.Debug.WriteLine(string.Format(Localizer.Culture, "Failed to enrich the log with a stack trace: {0}", e.GetMessage()));
                 }
             }
 
@@ -330,9 +351,10 @@ namespace WinMemoryCleaner
                     {
                         Console.WriteLine(message);
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        // ignored
+                        // The console went away; fall back to Trace so the message survives.
+                        Trace.WriteLine(string.Format(Localizer.Culture, "Console write failed ({0}): {1}", e.GetMessage(), message));
                     }
                 }
 

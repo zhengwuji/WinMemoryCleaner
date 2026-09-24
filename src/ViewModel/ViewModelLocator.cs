@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace WinMemoryCleaner
 {
@@ -56,9 +56,9 @@ namespace WinMemoryCleaner
                     if (MainViewModel != null)
                         MainViewModel.Dispose();
                 }
-                catch
+                catch (Exception e)
                 {
-                    // ignored
+                    Logger.Debug(e);
                 }
             }
         }

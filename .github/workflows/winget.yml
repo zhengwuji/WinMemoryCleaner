@@ -99,7 +99,7 @@ jobs:
               repo: context.repo.repo
             });
             core.setOutput('desc', repo.description?.trim() || "This free RAM cleaner uses native Windows features to optimize memory areas. It's a compact, portable, and smart application.");
-            core.setOutput('homepage', repo.homepage?.trim() || repo.html_url || 'https://github.com/IgorMundstein/WinMemoryCleaner');
+            core.setOutput('homepage', repo.homepage?.trim() || repo.html_url || 'https://github.com/zhengwuji/WinMemoryCleaner');
             core.setOutput('license', repo.license?.spdx_id || 'GPL-3.0');
 
       - name: Build Tags from repo topics

@@ -1,6 +1,6 @@
 # Windows Memory Cleaner
 
-[![](https://img.shields.io/badge/WINDOWS-XP%20%E2%80%93%2011-blue?style=for-the-badge)](#windows-memory-cleaner) [![](https://img.shields.io/badge/SERVER-2003%20%E2%80%93%202025-blue?style=for-the-badge)](#windows-memory-cleaner) [![](https://img.shields.io/github/license/IgorMundstein/WinMemoryCleaner?color=2ea44f&style=for-the-badge)](/LICENSE) [![](https://img.shields.io/github/downloads/IgorMundstein/WinMemoryCleaner/total?color=orange&style=for-the-badge)](https://github.com/IgorMundstein/WinMemoryCleaner/releases/latest)
+[![](https://img.shields.io/badge/WINDOWS-VISTA%20%E2%80%93%2011-blue?style=for-the-badge)](#windows-memory-cleaner) [![](https://img.shields.io/badge/SERVER-2008%20%E2%80%93%202025-blue?style=for-the-badge)](#windows-memory-cleaner) [![](https://img.shields.io/github/license/zhengwuji/WinMemoryCleaner?color=2ea44f&style=for-the-badge)](/LICENSE) [![](https://img.shields.io/github/downloads/zhengwuji/WinMemoryCleaner/total?color=orange&style=for-the-badge)](https://github.com/zhengwuji/WinMemoryCleaner/releases/latest)
 
 WMC is a free RAM cleaner that effectively optimizes memory areas by utilizing the native Windows API. This can help improve performance when programs do not properly release allocated memory. Featuring a user-friendly interface and intelligent functionality, this portable application requires no installation; however, it does need administrator privileges to run.
 
@@ -8,7 +8,7 @@ WMC is a free RAM cleaner that effectively optimizes memory areas by utilizing t
 
 ## 💾 Download
 
-[![](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Frepos%2FIgorMundstein%2FWinMemoryCleaner%2Freleases%2Flatest&query=%24.tag_name&label=Release&style=for-the-badge)](https://github.com/IgorMundstein/WinMemoryCleaner/releases/latest/download/WinMemoryCleaner.exe)
+[![](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fzhengwuji%2FWinMemoryCleaner%2Freleases%2Flatest&query=%24.tag_name&label=Release&style=for-the-badge)](https://github.com/zhengwuji/WinMemoryCleaner/releases/latest/download/WinMemoryCleaner.exe)
 
 ### 🍫 [Chocolatey](https://community.chocolatey.org/packages/winmemorycleaner)
 
@@ -92,13 +92,13 @@ Here’s a breakdown of what each function does and the minimum supported Window
 | Memory Area | Description | Windows | Server |
 | :--- | :--- | :---: | :---: |
 | **Combined&nbsp;Page&nbsp;List** | Flushes memory blocks from the page-combining list, a memory-saving feature in modern Windows that merges identical pages of memory. | 8+ | 2012+ |
-| **Modified&nbsp;File&nbsp;Cache** | Flushes the volume file cache to disk for all fixed drives, ensuring all pending writes are committed. | XP+ | 2003+ |
-| **Modified&nbsp;Page&nbsp;List** | Writes unsaved pages from RAM to disk and moves the now-saved pages to the standby list. | Vista+ | 2008+ |
+| **Modified&nbsp;File&nbsp;Cache** | Flushes the volume file cache to disk for all fixed drives, ensuring all pending writes are committed. | 7+ | 2008&nbsp;R2+ |
+| **Modified&nbsp;Page&nbsp;List** | Writes unsaved pages from RAM to disk and moves the now-saved pages to the standby list. | 7+ | 2008&nbsp;R2+ |
 | **Registry&nbsp;Cache** | Flushes registry hives from memory. Hives are logical groups of keys and values that are loaded into memory when the OS starts or a user logs in. | 8.1+ | 2012+ |
 | **Standby&nbsp;List** | Clears the entire Standby List, which contains cached data from closed applications. This aggressive method frees the maximum amount of cached RAM for demanding tasks. | Vista+ | 2008+ |
-| **Standby&nbsp;List&nbsp;(low&nbsp;priority)** | Clears only the lowest-priority pages from the Standby List. This gentle method frees some cached RAM without removing data that Windows considers more important. | Vista+ | 2008+ |
-| **System&nbsp;File&nbsp;Cache** | Flushes the cache Windows uses for its system files, trimming it to release memory. Useful for refreshing the system’s state before launching a memory-intensive application. | XP+ | 2003+ |
-| **Working&nbsp;Set** | Removes memory from all user-mode and system working sets, forcing processes (like games or browsers that hoard memory) to release non-essential RAM. This can reduce stutter and improve responsiveness. | XP+ | 2003+ |
+| **Standby&nbsp;List&nbsp;(low&nbsp;priority)** | Clears only the lowest-priority pages from the Standby List. This gentle method frees some cached RAM without removing data that Windows considers more important. | 7+ | 2008&nbsp;R2+ |
+| **System&nbsp;File&nbsp;Cache** | Flushes the cache Windows uses for its system files, trimming it to release memory. Useful for refreshing the system’s state before launching a memory-intensive application. | 7+ | 2008&nbsp;R2+ |
+| **Working&nbsp;Set** | Removes memory from all user-mode and system working sets, forcing processes (like games or browsers that hoard memory) to release non-essential RAM. This can reduce stutter and improve responsiveness. | 7+ | 2008&nbsp;R2+ |
 
 ## 🔴 The Problem: Inefficient Memory Management
 
@@ -356,9 +356,9 @@ This project exists to serve the users who were left behind by the march of tech
 - No third-party dependencies
 - Portable (Single executable file)
 - Right-to-left language support and bidirectional text
-- Use of S.O.L.I.D. principles in object-oriented programming (limited due to the legacy .NET 4.0 framework)
+- Use of S.O.L.I.D. principles in object-oriented programming (limited by the .NET Framework 4.8 target)
 - Use of Windows API methods for memory management
-- Windows retro-compatibility (Windows XP, Server 2003, and later)
+- Windows retro-compatibility (Windows Vista, Server 2008, and later)
 
 ### 💭 Where does the app save the settings?
 
@@ -386,7 +386,7 @@ You can test any translation by creating a file alongside the executable:
 1. Visit [https://ss64.com/locale.html](https://ss64.com/locale.html) to get the **locale description** for your language.
 2. Save your translation as **{locale-description}.json** using **UTF-8** character encoding.
 3. Launch the application. If successful, the new language and your changes will be visible.
-4. Once tested, please either submit a pull request or submit the file via the **[Translation Request](https://github.com/IgorMundstein/WinMemoryCleaner/issues/new?template=translation_request.yml)** issue template.
+4. Once tested, please either submit a pull request or submit the file via the **[Translation Request](https://github.com/zhengwuji/WinMemoryCleaner/issues/new?template=translation_request.yml)** issue template.
 
 ### 👨‍💻 For Developers
 

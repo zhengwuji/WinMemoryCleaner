@@ -44,7 +44,7 @@
       "operatingSystem":"Windows",
       "url":"https://winmemorycleaner.com/",
       "description":"This free RAM cleaner uses native Windows features to efficiently clear memory areas, helping to resolve slow performance caused by programs that fail to release allocated memory.",
-      "license":"https://github.com/IgorMundstein/WinMemoryCleaner/blob/main/LICENSE",
+      "license":"https://github.com/zhengwuji/WinMemoryCleaner/blob/main/LICENSE",
       "author":{"@type":"Person","name":"Igor Mundstein"},
       "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}
     }
@@ -256,7 +256,7 @@
                     <a class="btn btn-blue btn-hero text-lg" href="#download">
                         Download
                     </a>
-                    <a class="btn btn-gray btn-hero text-lg" href="https://github.com/IgorMundstein/WinMemoryCleaner?tab=readme-ov-file#windows-memory-cleaner" rel="noopener" target="_blank">
+                    <a class="btn btn-gray btn-hero text-lg" href="https://github.com/zhengwuji/WinMemoryCleaner?tab=readme-ov-file#windows-memory-cleaner" rel="noopener" target="_blank">
                         Documentation
                     </a>
                 </div>
@@ -266,14 +266,14 @@
                          decoding="async"
                          fetchpriority="high"
                          height="20"
-                         src="https://img.shields.io/github/stars/IgorMundstein/WinMemoryCleaner?style=social"
+                         src="https://img.shields.io/github/stars/zhengwuji/WinMemoryCleaner?style=social"
                          width="91">
                     <img alt="GitHub downloads"
                          class="badge-img"
                          decoding="async"
                          fetchpriority="high"
                          height="20"
-                         src="https://img.shields.io/github/downloads/IgorMundstein/WinMemoryCleaner/total?style=social"
+                         src="https://img.shields.io/github/downloads/zhengwuji/WinMemoryCleaner/total?style=social"
                          width="111">
                 </div>
             </div>
@@ -425,7 +425,7 @@
                     You can also provide feedback by reporting bugs, requesting features, asking questions, or submitting translations.
                 </p>
                 <div class="flex flex-wrap gap-4 items-center justify-center">
-                    <a class="btn btn-gray" href="https://github.com/IgorMundstein/WinMemoryCleaner/issues/new/choose" rel="noopener" target="_blank">
+                    <a class="btn btn-gray" href="https://github.com/zhengwuji/WinMemoryCleaner/issues/new/choose" rel="noopener" target="_blank">
                         Provide Feedback
                     </a>
                 </div>
@@ -440,7 +440,7 @@
             <div class="bg-gray-900/50 border border-gray-800 code-box-fixed-width mx-auto p-4 rounded-xl md:p-8">
                 
                 <div class="flex justify-center">
-                    <a class="btn btn-blue flex-col py-4 w-full" href="https://github.com/IgorMundstein/WinMemoryCleaner/releases/latest/download/WinMemoryCleaner.exe">
+                    <a class="btn btn-blue flex-col py-4 w-full" href="https://github.com/zhengwuji/WinMemoryCleaner/releases/latest/download/WinMemoryCleaner.exe">
                         <span class="text-xl">Download</span>
                         <span class="font-medium hidden mt-1 text-sm text-white" id="latest-version"></span>
                     </a>
@@ -494,7 +494,7 @@
         <div class="max-w-screen-xl mx-auto px-4 py-4 text-center text-gray-400 text-sm">
             <p>
                 WMC is a free, open-source project licensed under
-                <a class="font-medium hover:text-white text-blue-400" href="https://github.com/IgorMundstein/WinMemoryCleaner/blob/main/LICENSE" rel="noopener" target="_blank">GPL-3.0</a>
+                <a class="font-medium hover:text-white text-blue-400" href="https://github.com/zhengwuji/WinMemoryCleaner/blob/main/LICENSE" rel="noopener" target="_blank">GPL-3.0</a>
             </p>
             <p class="mt-2 text-sm" id="copyright">© 2019 - 2025 Igor Mundstein</p>
         </div>
@@ -554,7 +554,7 @@
             }
         });
 
-        fetch('https://api.github.com/repos/IgorMundstein/WinMemoryCleaner/releases/latest')
+        fetch('https://api.github.com/repos/zhengwuji/WinMemoryCleaner/releases/latest')
             .then(response => response.ok ? response.json() : Promise.reject())
             .then(data => {
                 const element = document.getElementById('latest-version');

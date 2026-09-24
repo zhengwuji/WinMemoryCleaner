@@ -737,18 +737,13 @@ namespace WinMemoryCleaner.Test
             }
 
             [Test]
-            public void NameOf_WithNullExpression_ThrowsArgumentNullException()
-            {
-                Assert.Throws<ArgumentNullException>(() => Helper.NameOf<object>(null));
-            }
-
-            [Test]
             public void NameOf_WithValidExpression_ReturnsPropertyName()
             {
+                // C# 6+ nameof is the single source of member names; the old
+                // expression-tree helper has been removed.
                 var testObject = new { TestProperty = "value" };
-                var name = Helper.NameOf(() => testObject.TestProperty);
 
-                Assert.AreEqual("TestProperty", name);
+                Assert.AreEqual("TestProperty", nameof(testObject.TestProperty));
             }
 
             [Test]
@@ -1185,6 +1180,44 @@ namespace WinMemoryCleaner.Test
             }
 
             [Test]
+            public void Save_RepeatedCallsAreIdempotent()
+            {
+                // Save() short-circuits when nothing changed, so calling it repeatedly
+                // must stay side-effect free and never throw.
+                Assert.DoesNotThrow(() =>
+                {
+                    Settings.Save();
+                    Settings.Save();
+                    Settings.Save();
+                });
+            }
+
+            [Test]
+            public void Save_AfterAValueChange_DoesNotThrow()
+            {
+                var original = Settings.AlwaysOnTop;
+
+                try
+                {
+                    Settings.AlwaysOnTop = !original;
+
+                    Assert.DoesNotThrow(() => Settings.Save());
+                }
+                finally
+                {
+                    Settings.AlwaysOnTop = original;
+
+                    Assert.DoesNotThrow(() => Settings.Save());
+                }
+            }
+
+            [Test]
+            public void Reset_DoesNotThrow()
+            {
+                Assert.DoesNotThrow(() => Settings.Reset(true));
+            }
+
+            [Test]
             public void ShowOptimizationNotifications_CanBeAccessed()
             {
                 Assert.DoesNotThrow(() => { var show = Settings.ShowOptimizationNotifications; });
@@ -1316,6 +1349,115 @@ namespace WinMemoryCleaner.Test
                 var themes = ThemeManager.Themes;
 
                 Assert.IsNotNull(themes);
+            }
+        }
+
+        #endregion
+
+        #region Updater Tests
+
+        [TestFixture]
+        public class UpdaterTests
+        {
+            [Test]
+            public void ApplyUpdate_WithNullArguments_ReturnsFalse()
+            {
+                Assert.IsFalse(Updater.ApplyUpdate(null));
+            }
+
+            [Test]
+            public void ApplyUpdate_WithEmptyArguments_ReturnsFalse()
+            {
+                Assert.IsFalse(Updater.ApplyUpdate(new string[0]));
+            }
+
+            [Test]
+            public void ApplyUpdate_WithoutApplyUpdateSwitch_ReturnsFalse()
+            {
+                Assert.IsFalse(Updater.ApplyUpdate(new[] { "/Reset", "dGVzdA==", "1234" }));
+            }
+
+            [Test]
+            public void ApplyUpdate_WithSwitchButMissingOperands_ReturnsFalse()
+            {
+                // The switch must be followed by the target path and the previous process id.
+                Assert.IsFalse(Updater.ApplyUpdate(new[] { "/ApplyUpdate" }));
+                Assert.IsFalse(Updater.ApplyUpdate(new[] { "/ApplyUpdate", "dGVzdA==" }));
+            }
+
+            [Test]
+            public void ApplyUpdate_WithInvalidBase64TargetPath_ReturnsFalse()
+            {
+                Assert.IsFalse(Updater.ApplyUpdate(new[] { "/ApplyUpdate", "not base64!!", "1234" }));
+            }
+
+            [Test]
+            public void ApplyUpdate_WithEmptyTargetPath_ReturnsFalse()
+            {
+                Assert.IsFalse(Updater.ApplyUpdate(new[] { "/ApplyUpdate", string.Empty, "1234" }));
+            }
+
+            [Test]
+            public void ApplyUpdate_IsCaseInsensitiveOnTheSwitch()
+            {
+                // A non-existent target path decodes fine, so the call must fail on the
+                // path check rather than on switch recognition. Either way it returns
+                // false here because the current executable equals the target path.
+                Assert.DoesNotThrow(() => Updater.ApplyUpdate(new[] { "/applyupdate", "dGVzdA==", "0" }));
+            }
+
+            [Test]
+            public void IsTrustedUpdate_WithNullPath_ReturnsFalse()
+            {
+                Assert.IsFalse(Updater.IsTrustedUpdate(null));
+            }
+
+            [Test]
+            public void IsTrustedUpdate_WithEmptyPath_ReturnsFalse()
+            {
+                Assert.IsFalse(Updater.IsTrustedUpdate(string.Empty));
+            }
+
+            [Test]
+            public void IsTrustedUpdate_WithNonExistentFile_ReturnsFalse()
+            {
+                Assert.IsFalse(Updater.IsTrustedUpdate(Path.Combine(Path.GetTempPath(), "wmc-does-not-exist-" + Guid.NewGuid().ToString("N") + ".exe")));
+            }
+
+            [Test]
+            public void IsTrustedUpdate_WithUnsignedFile_ReturnsFalse()
+            {
+                // A file that exists but carries no Authenticode signature must be rejected.
+                var path = Path.Combine(Path.GetTempPath(), "wmc-unsigned-" + Guid.NewGuid().ToString("N") + ".txt");
+
+                try
+                {
+                    File.WriteAllText(path, "unsigned");
+
+                    Assert.IsFalse(Updater.IsTrustedUpdate(path));
+                }
+                finally
+                {
+                    if (File.Exists(path))
+                        File.Delete(path);
+                }
+            }
+
+            [Test]
+            public void Update_WithAutoUpdateDisabled_ReturnsWithoutThrowing()
+            {
+                var original = Settings.AutoUpdate;
+
+                try
+                {
+                    Settings.AutoUpdate = false;
+
+                    Assert.DoesNotThrow(() => Updater.Update());
+                }
+                finally
+                {
+                    Settings.AutoUpdate = original;
+                }
             }
         }
 

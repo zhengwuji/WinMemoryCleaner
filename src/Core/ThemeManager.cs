@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -15,7 +15,7 @@ namespace WinMemoryCleaner
     /// <summary>
     /// Centralized theme manager that provides all theme resources with enhanced security
     /// </summary>
-    public static class ThemeManager
+    public static partial class ThemeManager
     {
         private const int MAX_BRUSHES_COUNT = 500;
         private const int MAX_RESOURCE_KEY_LENGTH = 100;
@@ -49,9 +49,13 @@ namespace WinMemoryCleaner
                 {
                     Logger.Error("Failed to initialize timer: " + e.Message);
                 }
-                catch
+                catch (Exception inner)
                 {
+                    // Logger itself failed; this runs during static initialization, so
+                    // only the debugger output is still available.
+                    System.Diagnostics.Debug.WriteLine(string.Format(Localizer.Culture, "Failed to log the timer initialization failure: {0}", inner.GetMessage()));
                 }
+
                 return null;
             }
         }
@@ -161,8 +165,10 @@ namespace WinMemoryCleaner
             {
                 return _resourceKeyPattern.IsMatch(key);
             }
-            catch
+            catch (Exception e)
             {
+                Logger.Debug(e, "Failed to match the resource key pattern.");
+
                 return false;
             }
         }
@@ -173,8 +179,10 @@ namespace WinMemoryCleaner
             {
                 return Enum.IsDefined(typeof(Enums.Theme), theme);
             }
-            catch
+            catch (Exception e)
             {
+                Logger.Debug(e, "Failed to validate the theme value.");
+
                 return false;
             }
         }
@@ -327,433 +335,6 @@ namespace WinMemoryCleaner
             {
                 Logger.Error("Brush initialization failed: " + e.Message);
                 _brushes = new List<WpfBrush>();
-            }
-        }
-
-        private static float GetColorHueSafe(WpfBrush brush)
-        {
-            try
-            {
-                if (brush == null)
-                    return 0f;
-
-                var color = brush.Color;
-                var winFormsColor = WinFormsColor.FromArgb(color.A, color.R, color.G, color.B);
-                var hue = winFormsColor.GetHue();
-
-                if (float.IsNaN(hue) || float.IsInfinity(hue))
-                    return 0f;
-
-                return Math.Max(0f, Math.Min(360f, hue));
-            }
-            catch
-            {
-                return 0f;
-            }
-        }
-
-        private static float GetColorSaturationSafe(WpfBrush brush)
-        {
-            try
-            {
-                if (brush == null)
-                    return 0f;
-
-                var color = brush.Color;
-                var winFormsColor = WinFormsColor.FromArgb(color.A, color.R, color.G, color.B);
-                var saturation = winFormsColor.GetSaturation();
-
-                if (float.IsNaN(saturation) || float.IsInfinity(saturation))
-                    return 0f;
-
-                return Math.Max(0f, Math.Min(1f, saturation));
-            }
-            catch
-            {
-                return 0f;
-            }
-        }
-
-        private static float GetColorBrightnessSafe(WpfBrush brush)
-        {
-            try
-            {
-                if (brush == null)
-                    return 0f;
-
-                var color = brush.Color;
-                var winFormsColor = WinFormsColor.FromArgb(color.A, color.R, color.G, color.B);
-                var brightness = winFormsColor.GetBrightness();
-
-                if (float.IsNaN(brightness) || float.IsInfinity(brightness))
-                    return 0f;
-
-                return Math.Max(0f, Math.Min(1f, brightness));
-            }
-            catch
-            {
-                return 0f;
-            }
-        }
-
-        /// <summary>
-        /// Gets the accent color for Windows Forms controls.
-        /// </summary>
-        public static WinFormsColor AccentColor
-        {
-            get { return GetColorSafe(Helper.NameOf(() => AccentColor).Replace("Color", string.Empty), WinFormsColor.DeepSkyBlue); }
-        }
-
-        /// <summary>
-        /// Gets the primary background color for Windows Forms controls.
-        /// </summary>
-        public static WinFormsColor PrimaryBackgroundColor
-        {
-            get { return GetColorSafe(Helper.NameOf(() => PrimaryBackgroundColor).Replace("Color", string.Empty), WinFormsColor.FromArgb(32, 32, 32)); }
-        }
-
-        /// <summary>
-        /// Gets the secondary background color for Windows Forms controls.
-        /// </summary>
-        public static WinFormsColor SecondaryBackgroundColor
-        {
-            get { return GetColorSafe(Helper.NameOf(() => SecondaryBackgroundColor).Replace("Color", string.Empty), WinFormsColor.DarkSlateGray); }
-        }
-        
-        /// <summary>
-        /// Gets the secondary border color for Windows Forms controls.
-        /// </summary>
-        public static WinFormsColor SecondaryBorderColor
-        {
-            get { return GetColorSafe(Helper.NameOf(() => SecondaryBorderColor).Replace("Color", string.Empty), WinFormsColor.DimGray); }
-        }
-
-        /// <summary>
-        /// Gets the secondary foreground color for Windows Forms controls.
-        /// </summary>
-        public static WinFormsColor SecondaryForegroundColor
-        {
-            get { return GetColorSafe(Helper.NameOf(() => SecondaryForegroundColor).Replace("Color", string.Empty), WinFormsColor.White); }
-        }
-
-        private static WinFormsColor GetColorSafe(string resourceKey, WinFormsColor fallback)
-        {
-            if (!IsValidResourceKey(resourceKey))
-            {
-                Logger.Warning("Invalid resource key: " + resourceKey);
-                return fallback;
-            }
-
-            try
-            {
-                lock (_colorCache)
-                {
-                    WinFormsColor cachedColor;
-                    if (_colorCache.TryGetValue(resourceKey, out cachedColor))
-                    {
-                        return cachedColor;
-                    }
-                }
-
-                EnsureInitialized();
-
-                var app = WpfApplication.Current;
-                if (app == null || app.Resources == null)
-                    return fallback;
-
-                var resource = app.Resources[resourceKey] as WpfBrush;
-                if (resource == null)
-                    return fallback;
-
-                var color = resource.Color;
-                var result = WinFormsColor.FromArgb(color.A, color.R, color.G, color.B);
-
-                lock (_colorCache)
-                {
-                    if (!_colorCache.ContainsKey(resourceKey))
-                    {
-                        _colorCache[resourceKey] = result;
-                    }
-                }
-
-                return result;
-            }
-            catch (Exception e)
-            {
-                Logger.Error("Failed to get color for resource " + resourceKey + ": " + e.Message);
-                return fallback;
-            }
-        }
-
-        /// <summary>
-        /// Gets the brushes with defensive copying.
-        /// </summary>
-        public static List<WpfBrush> Brushes
-        {
-            get
-            {
-                EnsureInitialized();
-                lock (_lockObject)
-                {
-                    var brushes = _brushes;
-                    if (brushes == null || brushes.Count == 0)
-                        return new List<WpfBrush>();
-
-                    return new List<WpfBrush>(brushes);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the theme with enhanced validation and error handling.
-        /// </summary>
-        public static Enums.Theme Theme
-        {
-            get
-            {
-                EnsureInitialized();
-                lock (_lockObject)
-                {
-                    return _theme;
-                }
-            }
-            set
-            {
-                if (!IsValidTheme(value))
-                {
-                    Logger.Warning("Invalid theme value: " + value);
-                    throw new ArgumentException("Invalid theme value: " + value, "value");
-                }
-
-                EnsureInitialized();
-
-                lock (_lockObject)
-                {
-                    if (_theme == value)
-                        return;
-
-                    var oldTheme = _theme;
-
-                    try
-                    {
-                        Load(value);
-                        _theme = value;
-
-                        lock (_colorCache)
-                        {
-                            _colorCache.Clear();
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error("Failed to load theme " + value + ", reverting to " + oldTheme + ": " + e.Message);
-                        _theme = oldTheme;
-                        throw;
-                    }
-                }
-
-                try
-                {
-                    App.ReleaseMemory();
-                }
-                catch (Exception e)
-                {
-                    Logger.Error("Failed to release memory after theme change: " + e.Message);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets the themes with defensive copying.
-        /// </summary>
-        public static List<Enums.Theme> Themes
-        {
-            get
-            {
-                EnsureInitialized();
-                lock (_lockObject)
-                {
-                    var themes = _themes;
-                    if (themes == null || themes.Count == 0)
-                    {
-                        return new List<Enums.Theme> { Enums.Theme.Dark };
-                    }
-
-                    return new List<Enums.Theme>(themes);
-                }
-            }
-        }
-
-        private static bool IsValidHexColor(string hex)
-        {
-            if (string.IsNullOrEmpty(hex))
-                return false;
-
-            if (hex.Length > MAX_HEX_COLOR_LENGTH)
-                return false;
-
-            try
-            {
-                return _hexColorPattern.IsMatch(hex);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private static void Load(Enums.Theme theme)
-        {
-            Theme resource;
-
-            try
-            {
-                if (string.IsNullOrEmpty(Constants.App.ThemesResourcePath) ||
-                    string.IsNullOrEmpty(Constants.App.EmbeddedResourcePathExtension))
-                {
-                    Logger.Error("Theme resource path constants are null or empty");
-                    return;
-                }
-
-                if (Constants.App.ThemesResourcePath.Contains("..") ||
-                    Constants.App.EmbeddedResourcePathExtension.Contains(".."))
-                {
-                    Logger.Error("Theme resource path contains directory traversal characters");
-                    return;
-                }
-
-                var resourcePath = string.Format(CultureInfo.InvariantCulture,
-                    "{0}{1}Theme{2}",
-                    Constants.App.ThemesResourcePath,
-                    theme,
-                    Constants.App.EmbeddedResourcePathExtension);
-
-                if (resourcePath.Length > 260)
-                {
-                    Logger.Error("Theme resource path is too long");
-                    return;
-                }
-
-                resource = Helper.ReadEmbeddedResource<Theme>(resourcePath);
-            }
-            catch (Exception e)
-            {
-                Logger.Error("Failed to read embedded theme resource for " + theme + ": " + e.Message);
-                return;
-            }
-
-            if (resource == null)
-            {
-                Logger.Warning("Theme resource is null for " + theme);
-                return;
-            }
-
-            try
-            {
-                var app = WpfApplication.Current;
-                if (app == null || app.Resources == null)
-                {
-                    Logger.Warning("Application.Current or Resources is null during theme loading");
-                    return;
-                }
-
-                var properties = typeof(Theme).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                if (properties == null || properties.Length == 0)
-                {
-                    Logger.Warning("No properties found on Theme class");
-                    return;
-                }
-
-                foreach (var property in properties)
-                {
-                    if (property == null)
-                        continue;
-
-                    if (!IsValidResourceKey(property.Name))
-                    {
-                        Logger.Warning("Invalid property name skipped: " + property.Name);
-                        continue;
-                    }
-
-                    string hex;
-
-                    try
-                    {
-                        hex = property.GetValue(resource, null) as string;
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error("Failed to get property value for " + property.Name + ": " + e.Message);
-                        continue;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(hex))
-                        continue;
-
-                    if (!IsValidHexColor(hex))
-                    {
-                        Logger.Warning("Invalid hex color '" + hex + "' for property " + property.Name);
-                        continue;
-                    }
-
-                    try
-                    {
-                        var color = ParseHexColor(hex);
-                        app.Resources[property.Name] = new WpfBrush(color);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error("Failed to parse or set color for property " + property.Name + ": " + e.Message);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Error("Failed to apply theme " + theme + ": " + e.Message);
-            }
-        }
-
-        private static WpfColor ParseHexColor(string hexColor)
-        {
-            if (string.IsNullOrEmpty(hexColor))
-                throw new ArgumentException("Hex color cannot be null or empty", "hexColor");
-
-            if (!IsValidHexColor(hexColor))
-                throw new ArgumentException("Invalid hex color format: " + hexColor, "hexColor");
-
-            try
-            {
-                var color = System.Drawing.ColorTranslator.FromHtml(hexColor);
-                return WpfColor.FromArgb(color.A, color.R, color.G, color.B);
-            }
-            catch (Exception e)
-            {
-                Logger.Error("Failed to parse hex color '" + hexColor + "': " + e.Message);
-                throw new ArgumentException("Invalid hex color format: " + hexColor, "hexColor", e);
-            }
-        }
-
-        /// <summary>
-        /// Cleanup method for proper resource disposal
-        /// </summary>
-        public static void Cleanup()
-        {
-            try
-            {
-                lock (_initializationLock)
-                {
-                    if (_initializationTimer != null)
-                        _initializationTimer.Dispose();
-                }
-
-                lock (_colorCache)
-                {
-                    _colorCache.Clear();
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Error("Cleanup failed: " + e.Message);
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Input;
 
 namespace WinMemoryCleaner
@@ -51,9 +51,10 @@ namespace WinMemoryCleaner
                 {
                     NotificationService.Loading(value);
                 }
-                catch
+                catch (Exception e)
                 {
-                    // ignored
+                    // A notification failure must never block a view model update.
+                    Logger.Debug(e);
                 }
 
                 _isBusy = value;

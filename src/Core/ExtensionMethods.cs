@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -33,8 +33,11 @@ namespace WinMemoryCleaner
                     m => m.Groups[1].Value + m.Groups[2].Value + culture.TextInfo.ToUpper(m.Groups[3].Value[0])
                 );
             }
-            catch
+            catch (Exception e)
             {
+                // Localization is cosmetic here; return the original text unchanged.
+                Logger.Debug(e, "Failed to capitalize the text.");
+
                 return obj;
             }
         }
@@ -134,8 +137,12 @@ namespace WinMemoryCleaner
                     else
                         messages.Add(exception.ToString());
                 }
-                catch
+                catch (Exception e)
                 {
+                    // GetMessage() is used by Logger itself, so this catch must never
+                    // route through Logger or it would recurse while formatting a log.
+                    System.Diagnostics.Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, "Failed to read an exception message: {0}", e.GetMessage()));
+
                     messages.Add(exception.ToString());
                 }
 
@@ -272,8 +279,10 @@ namespace WinMemoryCleaner
             {
                 return new SolidBrush(ColorTranslator.FromHtml(obj));
             }
-            catch
+            catch (Exception e)
             {
+                Logger.Debug(e, "Failed to parse the color '" + obj + "'; using the fallback color.");
+
                 return fallbackValue;
             }
         }

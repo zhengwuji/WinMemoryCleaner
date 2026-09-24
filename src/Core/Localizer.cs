@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -40,8 +40,12 @@ namespace WinMemoryCleaner
             {
                 Culture = new CultureInfo(Settings.Language);
             }
-            catch
+            catch (Exception e)
             {
+                // Localizer is part of the logging pipeline, so it cannot log through
+                // Logger here without risking recursion during static initialization.
+                System.Diagnostics.Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, "Unsupported culture '{0}', falling back to English: {1}", Settings.Language, e.GetMessage()));
+
                 Culture = new CultureInfo(Constants.Windows.Locale.Name.English);
             }
 
@@ -92,10 +96,12 @@ namespace WinMemoryCleaner
                     Settings.Language = value.Name;
                     Settings.Save();
                 }
-                catch
+                catch (Exception e)
                 {
                     Settings.Language = Constants.Windows.Locale.Name.English;
                     Settings.Save();
+
+                    Logger.Error(e, "Failed to apply the selected language; reverted to English.");
 
                     throw;
                 }
@@ -135,9 +141,11 @@ namespace WinMemoryCleaner
                         if (localResources.Any())
                             resourceNames.AddRange(localResources);
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        // ignored
+                        // A missing or unreadable resource directory is not fatal: the
+                        // embedded localization resources are still used.
+                        Logger.Debug(e);
                     }
 
                     return CultureInfo.GetCultures(CultureTypes.AllCultures)

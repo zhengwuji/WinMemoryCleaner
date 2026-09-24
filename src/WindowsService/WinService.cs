@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.ServiceProcess;
 using System.Timers;
@@ -67,8 +67,10 @@ namespace WinMemoryCleaner
                         return (Enums.ServiceStatus)service.Status;
                     }
                 } 
-                catch
+                catch (Exception e)
                 {
+                    Logger.Debug(e, "Failed to read the service status.");
+
                     return Enums.ServiceStatus.NotInstalled;
                 }
             }
