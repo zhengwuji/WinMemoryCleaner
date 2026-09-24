@@ -62,7 +62,7 @@ jobs:
           $tagCandidate = "v$baseVer"
           if ($allTags -contains $tagCandidate -or $allTags -contains $baseVer) {
               $newTag = "v$baseVer.${{ github.run_number }}"
-              $targetVer = "$baseVer.${{ github.run_number }}.0"
+              $targetVer = "$baseVer.${{ github.run_number }}"
           } else {
               $newTag = "v$baseVer"
               $targetVer = "$baseVer.0"
